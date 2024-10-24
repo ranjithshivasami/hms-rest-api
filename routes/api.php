@@ -20,4 +20,5 @@ Route::middleware('auth:api')->group(function () {
     Route::put('users/{id}', [UserController::class, 'update']);
     Route::delete('users/{id}', [UserController::class, 'destroy']);
     Route::apiResource('patients', PatientController::class);
+    Route::post('updateMedicalHistory/{id}', [PatientController::class, 'updateMedicalHistory']);
 });

@@ -94,6 +94,25 @@ class PatientController extends Controller
         return response()->json($patient);
     }
 
+    public function updateMedicalHistory(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'medical_history' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $patient = Patient::find($id);
+        if (!$patient) {
+            return response()->json(['message' => 'Patient not found'], 404);
+        }
+
+        $patient->update($request->all());
+        return response()->json($patient);
+    }
+
     // Delete a patient
     public function destroy($id)
     {
