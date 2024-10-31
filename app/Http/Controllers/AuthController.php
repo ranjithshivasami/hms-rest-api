@@ -38,8 +38,19 @@ class AuthController extends Controller
         if (!$token = Auth::attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+        // Generate access token
+        $accessToken = $token;
 
-        return response()->json(compact('token'));
+        // Get refresh token expiration time from the config
+        $refreshTTL = config('jwt.refresh_ttl');
+
+        // Send response with access token and refresh token TTL
+        return response()->json([
+            'access_token' => $accessToken,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::factory()->getTTL() * 60, // Expiry time in seconds
+            'refresh_expires_in' => $refreshTTL * 60,       // Refresh token expiry in seconds
+        ]);
     }
 
     public function logout()
@@ -50,7 +61,18 @@ class AuthController extends Controller
 
     public function refresh()
     {
-        return response()->json(['token' => Auth::refresh()]);
+        try {
+            $newToken = JWTAuth::parseToken()->refresh();
+            return response()->json([
+                'access_token' => $newToken,
+                'token_type' => 'bearer',
+                'expires_in' => Auth::factory()->getTTL() * 60,
+            ]);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['error' => 'Token is invalid'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json(['error' => 'Could not refresh token'], 401);
+        }
     }
 
     public function me()
